@@ -159,14 +159,16 @@ class ElementBook
     sf::Texture bookTex;                                // Book icon texture
     sf::Sprite bookIcon;                                // Clickable book icon sprite
     sf::Text welcomeText;                               // Welcome message when no element selected
+    float bookScroll = 0.0f;                            // Scroll offset for book sidebar
+    const float bookScrollSpeed = 30.0f;                // Pixels per scroll step
 
 public:
     ElementBook(const std::map<std::string, sf::Texture> &tex) : textures(tex), isOpen(false), selectedIndex(-1)
     {
         // Load font for text rendering
-        if (!font.loadFromFile("fonts/ARCADECLASSIC.TTF"))
+        if (!font.loadFromFile("fonts/Pixel Game.otf"))
         {
-            std::cerr << "Failed to load font from fonts/ARCADECLASSIC.TTF, using fallback fonts/arial.ttf\n";
+            std::cerr << "Failed to load font from fonts/Pixel Game.otf, using fallback fonts/arial.ttf\n";
             font.loadFromFile("fonts/arial.ttf");
         }
 
@@ -199,7 +201,7 @@ public:
         welcomeText.setFont(font);
         welcomeText.setCharacterSize(22);
         welcomeText.setFillColor(sf::Color::Black);
-        welcomeText.setString("Click on the icons to view\nelements descriptions");
+        welcomeText.setString("Click on the icons to view elements descriptions");
     }
 
     /**
@@ -269,13 +271,32 @@ public:
             // Handle element selection in the sidebar
             for (size_t i = 0; i < elements.size(); ++i)
             {
-                sf::RectangleShape clickArea(sf::Vector2f(200, 30));
-                clickArea.setPosition(130, 100 + i * 30);
-                if (clickArea.getGlobalBounds().contains(mousePos))
+                float yPos = 100 + i * 30 - bookScroll;
+                sf::RectangleShape clickArea(sf::Vector2f(100, 30));
+                clickArea.setPosition(130, yPos);
+
+                // Only check if visible
+                if (yPos >= 70 && yPos <= 500 && clickArea.getGlobalBounds().contains(mousePos))
                 {
                     selectedIndex = static_cast<int>(i);
                     return;
                 }
+            }
+        }
+
+        // Handle scroll wheel for book sidebar
+        if (event.type == sf::Event::MouseWheelScrolled && isOpen)
+        {
+            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y));
+
+            // Check if mouse is over book sidebar
+            if (mousePos.x >= 100 && mousePos.x <= 200 && mousePos.y >= 100 && mousePos.y <= 500)
+            {
+                bookScroll -= event.mouseWheelScroll.delta * bookScrollSpeed;
+
+                // Clamp scroll bounds
+                float maxScroll = std::max(0.0f, elements.size() * 30.0f - 400 + 50);
+                bookScroll = std::max(0.0f, std::min(bookScroll, maxScroll));
             }
         }
     }
@@ -310,38 +331,41 @@ public:
         closeIcon.setScale(32.0f / crossTex.getSize().x, 32.0f / crossTex.getSize().y);
         window.draw(closeIcon);
 
-        // Draw element list in sidebar
+        // Draw element list in sidebar with scrolling
         for (size_t i = 0; i < elements.size(); ++i)
         {
-            sf::Sprite icon;
-            if (elements[i]->discovered)
-            {
-                // Show actual element icon if discovered
-                auto it = textures.find(elements[i]->name);
-                if (it != textures.end())
-                {
-                    icon.setTexture(it->second);
-                    icon.setScale(20.0f / it->second.getSize().x, 20.0f / it->second.getSize().y);
-                }
-            }
-            else
-            {
-                // Show placeholder for undiscovered elements
-                sf::Texture placeholder;
-                sf::Image img;
-                img.create(20, 20, sf::Color::White);
-                placeholder.loadFromImage(img);
-                icon.setTexture(placeholder);
-                icon.setScale(1.0f, 1.0f);
-            }
-            icon.setPosition(105, 110 + i * 30);
-            window.draw(icon);
+            float yPos = 110 + i * 30 - bookScroll;
 
-            // Draw element name or "???" for undiscovered elements
-            sf::Text text(elements[i]->discovered ? elements[i]->name : "???", font, 20);
-            text.setPosition(130, 110 + i * 30);
-            text.setFillColor(sf::Color::Black);
-            window.draw(text);
+            // Only draw if visible
+            if (yPos >= 100 && yPos <= 480)
+            {
+                sf::Sprite icon;
+                if (elements[i]->discovered)
+                {
+                    auto it = textures.find(elements[i]->name);
+                    if (it != textures.end())
+                    {
+                        icon.setTexture(it->second);
+                        icon.setScale(20.0f / it->second.getSize().x, 20.0f / it->second.getSize().y);
+                    }
+                }
+                else
+                {
+                    sf::Texture placeholder;
+                    sf::Image img;
+                    img.create(20, 20, sf::Color::White);
+                    placeholder.loadFromImage(img);
+                    icon.setTexture(placeholder);
+                    icon.setScale(1.0f, 1.0f);
+                }
+                icon.setPosition(105, yPos);
+                window.draw(icon);
+
+                sf::Text text(elements[i]->discovered ? elements[i]->name : "???", font, 20);
+                text.setPosition(130, yPos);
+                text.setFillColor(sf::Color::Black);
+                window.draw(text);
+            }
         }
 
         // Draw selected element details in main area
@@ -524,6 +548,8 @@ class Game
     sf::Font font;                                    // Font for UI text
     sf::Clock clock;                                  // Game timer
     const int maxObjects = 50;                        // Maximum objects allowed in world
+    float sidebarScroll = 0.0f;                       // Scroll offset for right sidebar
+    const float scrollSpeed = 30.0f;                  // Pixels per scroll step
 
 public:
     Game() : window(sf::VideoMode(800, 600), "Little Alchemist"), book(textures), invalidMarkTime(0)
@@ -531,9 +557,9 @@ public:
         window.setFramerateLimit(60); // Limit to 60 FPS
 
         // Load font for UI text
-        if (!font.loadFromFile("fonts/ARCADECLASSIC.TTF"))
+        if (!font.loadFromFile("fonts/Pixel Game.otf"))
         {
-            std::cerr << "Failed to load font from fonts/ARCADECLASSIC.TTF, using fallback fonts/arial.ttf\n";
+            std::cerr << "Failed to load font from fonts/Pixel Game.otf, using fallback fonts/arial.ttf\n";
             font.loadFromFile("fonts/arial.ttf");
         }
 
@@ -677,6 +703,30 @@ private:
                 window.close();
             }
 
+            // Handle scroll wheel for right sidebar
+            if (event.type == sf::Event::MouseWheelScrolled)
+            {
+                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y));
+
+                // Check if mouse is over right sidebar
+                if (mousePos.x > window.getSize().x - 100 && !book.isBookOpen())
+                {
+                    sidebarScroll -= event.mouseWheelScroll.delta * scrollSpeed;
+
+                    // Get count of discovered elements
+                    int discoveredCount = 0;
+                    for (auto &elem : elements)
+                    {
+                        if (elem->discovered)
+                            discoveredCount++;
+                    }
+
+                    // Clamp scroll bounds
+                    float maxScroll = std::max(0.0f, discoveredCount * 30.0f - window.getSize().y + 50);
+                    sidebarScroll = std::max(0.0f, std::min(sidebarScroll, maxScroll));
+                }
+            }
+
             // Let book handle its input first
             book.handleInput(event, window);
 
@@ -692,23 +742,29 @@ private:
                 sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
 
                 // Check if clicking on element buttons in right sidebar
+                int discoveredIndex = 0;
                 for (size_t i = 0; i < elements.size(); ++i)
                 {
                     if (!elements[i]->discovered)
-                        continue; // Skip undiscovered elements
+                        continue;
 
                     sf::RectangleShape clickArea(sf::Vector2f(100, 30));
-                    clickArea.setPosition(705, 10 + i * 30);
+                    clickArea.setPosition(705, 10 + discoveredIndex * 30 - sidebarScroll);
 
-                    // Create new object if clicking on element button and under object limit
-                    if (clickArea.getGlobalBounds().contains(mousePos) && objects.size() < maxObjects)
+                    // Only check if button is visible
+                    if (clickArea.getPosition().y >= -30 && clickArea.getPosition().y <= window.getSize().y)
                     {
-                        std::string spritePath = "assets/" + elements[i]->name + ".png";
-                        auto obj = std::make_shared<GameObject>(elements[i], textures[elements[i]->name],
-                                                                spritePath, sf::Vector2f(400, 300), clock.getElapsedTime().asSeconds());
-                        objects.push_back(obj);
-                        elements[i]->creationCount++;
+                        if (clickArea.getGlobalBounds().contains(mousePos) && objects.size() < maxObjects)
+                        {
+                            std::string spritePath = "assets/" + elements[i]->name + ".png";
+                            auto obj = std::make_shared<GameObject>(elements[i], textures[elements[i]->name],
+                                                                    spritePath, sf::Vector2f(400, 300), clock.getElapsedTime().asSeconds());
+                            objects.push_back(obj);
+                            elements[i]->creationCount++;
+                            break;
+                        }
                     }
+                    discoveredIndex++;
                 }
 
                 // Check if clicking on existing objects to start dragging
@@ -870,27 +926,35 @@ private:
         rightTab.setFillColor(sf::Color(255, 194, 77)); // Light gray
         window.draw(rightTab);
 
-        // Draw discovered element buttons in right sidebar
+        // Draw discovered element buttons in right sidebar with scrolling
+        int discoveredIndex = 0;
         for (size_t i = 0; i < elements.size(); ++i)
         {
             if (elements[i]->discovered)
             {
-                // Draw element icon
-                sf::Sprite icon;
-                auto it = textures.find(elements[i]->name);
-                if (it != textures.end())
-                {
-                    icon.setTexture(it->second);
-                    icon.setScale(20.0f / it->second.getSize().x, 20.0f / it->second.getSize().y);
-                    icon.setPosition(705, 10 + i * 30);
-                    window.draw(icon);
-                }
+                float yPos = 10 + discoveredIndex * 30 - sidebarScroll;
 
-                // Draw element name
-                sf::Text text(elements[i]->name, font, 20);
-                text.setPosition(730, 10 + i * 30);
-                text.setFillColor(sf::Color::Black);
-                window.draw(text);
+                // Only draw if visible
+                if (yPos >= -30 && yPos <= windowSize.y)
+                {
+                    // Draw element icon
+                    sf::Sprite icon;
+                    auto it = textures.find(elements[i]->name);
+                    if (it != textures.end())
+                    {
+                        icon.setTexture(it->second);
+                        icon.setScale(20.0f / it->second.getSize().x, 20.0f / it->second.getSize().y);
+                        icon.setPosition(705, yPos);
+                        window.draw(icon);
+                    }
+
+                    // Draw element name
+                    sf::Text text(elements[i]->name, font, 20);
+                    text.setPosition(730, yPos);
+                    text.setFillColor(sf::Color::Black);
+                    window.draw(text);
+                }
+                discoveredIndex++;
             }
         }
 
