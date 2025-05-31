@@ -62,9 +62,65 @@ class CombinationRegistry
 public:
     CombinationRegistry()
     {
-        // Define valid combinations - both orders are added for symmetry
+        // Basic Element Combinations (6 combinations)
+        combinations[{"Fire", "Water"}] = "Steam";
+        combinations[{"Water", "Fire"}] = "Steam";
+
+        combinations[{"Fire", "Earth"}] = "Lava";
+        combinations[{"Earth", "Fire"}] = "Lava";
+
         combinations[{"Fire", "Air"}] = "Smoke";
         combinations[{"Air", "Fire"}] = "Smoke";
+
+        combinations[{"Water", "Earth"}] = "Mud";
+        combinations[{"Earth", "Water"}] = "Mud";
+
+        combinations[{"Water", "Air"}] = "Mist";
+        combinations[{"Air", "Water"}] = "Mist";
+
+        combinations[{"Earth", "Air"}] = "Dust";
+        combinations[{"Air", "Earth"}] = "Dust";
+
+        // Duplicate Element Combinations (4 combinations)
+        combinations[{"Fire", "Fire"}] = "Energy";
+        combinations[{"Water", "Water"}] = "Ocean";
+        combinations[{"Earth", "Earth"}] = "Mountain";
+        combinations[{"Air", "Air"}] = "Wind";
+
+        // Advanced Combinations (12 combinations)
+        combinations[{"Steam", "Air"}] = "Cloud";
+        combinations[{"Air", "Steam"}] = "Cloud";
+
+        combinations[{"Cloud", "Water"}] = "Rain";
+        combinations[{"Water", "Cloud"}] = "Rain";
+
+        combinations[{"Mud", "Energy"}] = "Plant";
+        combinations[{"Energy", "Mud"}] = "Plant";
+
+        combinations[{"Lava", "Air"}] = "Stone";
+        combinations[{"Air", "Lava"}] = "Stone";
+
+        combinations[{"Lava", "Mountain"}] = "Volcano";
+        combinations[{"Mountain", "Lava"}] = "Volcano";
+
+        combinations[{"Energy", "Air"}] = "Lightning";
+        combinations[{"Air", "Energy"}] = "Lightning";
+
+        combinations[{"Water", "Wind"}] = "Ice";
+        combinations[{"Wind", "Water"}] = "Ice";
+
+        combinations[{"Stone", "Wind"}] = "Sand";
+        combinations[{"Wind", "Stone"}] = "Sand";
+
+        combinations[{"Mud", "Plant"}] = "Swamp";
+        combinations[{"Plant", "Mud"}] = "Swamp";
+
+        combinations[{"Plant", "Plant"}] = "Forest";
+
+        combinations[{"Sand", "Sand"}] = "Desert";
+
+        combinations[{"Energy", "Plant"}] = "Life";
+        combinations[{"Plant", "Energy"}] = "Life";
     }
 
     /**
@@ -108,9 +164,10 @@ public:
     ElementBook(const std::map<std::string, sf::Texture> &tex) : textures(tex), isOpen(false), selectedIndex(-1)
     {
         // Load font for text rendering
-        if (!font.loadFromFile("fonts/arial.ttf"))
+        if (!font.loadFromFile("fonts/ARCADECLASSIC.TTF"))
         {
-            std::cerr << "Failed to load font from fonts/arial.ttf\n";
+            std::cerr << "Failed to load font from fonts/ARCADECLASSIC.TTF, using fallback fonts/arial.ttf\n";
+            font.loadFromFile("fonts/arial.ttf");
         }
 
         // Load close button texture (X icon)
@@ -142,7 +199,7 @@ public:
         welcomeText.setFont(font);
         welcomeText.setCharacterSize(22);
         welcomeText.setFillColor(sf::Color::Black);
-        welcomeText.setString("Click on the icons to view elements' descriptions");
+        welcomeText.setString("Click on the icons to view\nelements descriptions");
     }
 
     /**
@@ -238,13 +295,13 @@ public:
         // Draw left sidebar (element list)
         sf::RectangleShape sidebar(sf::Vector2f(100, 400));
         sidebar.setPosition(100, 100);
-        sidebar.setFillColor(sf::Color(180, 180, 180));
+        sidebar.setFillColor(sf::Color(251, 251, 251));
         window.draw(sidebar);
 
         // Draw main book area (element details)
         sf::RectangleShape bg(sf::Vector2f(500, 400));
         bg.setPosition(200, 100);
-        bg.setFillColor(sf::Color(200, 200, 200));
+        bg.setFillColor(sf::Color(217, 234, 242));
         window.draw(bg);
 
         // Draw close button (X)
@@ -323,10 +380,102 @@ public:
             details.setFillColor(sf::Color::Black);
             if (elem->discovered)
             {
+                std::string formula;
+                if (elem->name == "Steam")
+                {
+                    formula = "Fire + Water";
+                }
+                else if (elem->name == "Lava")
+                {
+                    formula = "Fire + Earth";
+                }
+                else if (elem->name == "Smoke")
+                {
+                    formula = "Fire + Air";
+                }
+                else if (elem->name == "Mud")
+                {
+                    formula = "Water + Earth";
+                }
+                else if (elem->name == "Mist")
+                {
+                    formula = "Water + Air";
+                }
+                else if (elem->name == "Dust")
+                {
+                    formula = "Earth + Air";
+                }
+                else if (elem->name == "Energy")
+                {
+                    formula = "Fire + Fire";
+                }
+                else if (elem->name == "Ocean")
+                {
+                    formula = "Water + Water";
+                }
+                else if (elem->name == "Mountain")
+                {
+                    formula = "Earth + Earth";
+                }
+                else if (elem->name == "Wind")
+                {
+                    formula = "Air + Air";
+                }
+                else if (elem->name == "Cloud")
+                {
+                    formula = "Steam + Air";
+                }
+                else if (elem->name == "Rain")
+                {
+                    formula = "Cloud + Water";
+                }
+                else if (elem->name == "Plant")
+                {
+                    formula = "Mud + Energy";
+                }
+                else if (elem->name == "Stone")
+                {
+                    formula = "Lava + Air";
+                }
+                else if (elem->name == "Volcano")
+                {
+                    formula = "Lava + Mountain";
+                }
+                else if (elem->name == "Lightning")
+                {
+                    formula = "Energy + Air";
+                }
+                else if (elem->name == "Ice")
+                {
+                    formula = "Water + Wind";
+                }
+                else if (elem->name == "Sand")
+                {
+                    formula = "Stone + Wind";
+                }
+                else if (elem->name == "Swamp")
+                {
+                    formula = "Mud + Plant";
+                }
+                else if (elem->name == "Forest")
+                {
+                    formula = "Plant + Plant";
+                }
+                else if (elem->name == "Desert")
+                {
+                    formula = "Sand + Sand";
+                }
+                else if (elem->name == "Life")
+                {
+                    formula = "Energy + Plant";
+                }
+                else
+                {
+                    formula = "Basic Element";
+                }
                 // Show full details for discovered elements
                 details.setString("Name: " + elem->name + "\nCreated: " + std::to_string(elem->creationCount) +
-                                  "\nDescription: " + elem->description + "\nFormula: " +
-                                  (elem->name == "Smoke" ? "Fire + Air" : "Basic Element"));
+                                  "\nDescription: " + elem->description + "\nFormula: " + formula);
             }
             else
             {
@@ -382,16 +531,48 @@ public:
         window.setFramerateLimit(60); // Limit to 60 FPS
 
         // Load font for UI text
-        if (!font.loadFromFile("fonts/arial.ttf"))
+        if (!font.loadFromFile("fonts/ARCADECLASSIC.TTF"))
         {
-            std::cerr << "Failed to load font from fonts/arial.ttf\n";
+            std::cerr << "Failed to load font from fonts/ARCADECLASSIC.TTF, using fallback fonts/arial.ttf\n";
+            font.loadFromFile("fonts/arial.ttf");
         }
 
         // Define texture file paths for each element
         std::map<std::string, std::string> texturePaths = {
+            // Basic Elements
             {"Fire", "assets/fire.png"},
+            {"Water", "assets/water.png"},
+            {"Earth", "assets/earth.png"},
             {"Air", "assets/air.png"},
-            {"Smoke", "assets/smoke.png"}};
+
+            // Basic Combinations (2 basic elements)
+            {"Steam", "assets/steam.png"}, // Fire + Water
+            {"Lava", "assets/lava.png"},   // Fire + Earth
+            {"Smoke", "assets/smoke.png"}, // Fire + Air
+            {"Mud", "assets/mud.png"},     // Water + Earth
+            {"Mist", "assets/mist.png"},   // Water + Air
+            {"Dust", "assets/dust.png"},   // Earth + Air
+
+            // Duplicate Element Combinations
+            {"Energy", "assets/energy.png"},     // Fire + Fire
+            {"Ocean", "assets/ocean.png"},       // Water + Water
+            {"Mountain", "assets/mountain.png"}, // Earth + Earth
+            {"Wind", "assets/wind.png"},         // Air + Air
+
+            // Advanced Combinations
+            {"Cloud", "assets/cloud.png"},         // Steam + Air
+            {"Rain", "assets/rain.png"},           // Cloud + Water
+            {"Plant", "assets/plant.png"},         // Water + Earth + Energy
+            {"Stone", "assets/stone.png"},         // Lava + Air
+            {"Volcano", "assets/volcano.png"},     // Lava + Mountain
+            {"Lightning", "assets/lightning.png"}, // Energy + Air
+            {"Ice", "assets/ice.png"},             // Water + Wind
+            {"Sand", "assets/sand.png"},           // Stone + Wind
+            {"Swamp", "assets/swamp.png"},         // Mud + Plant
+            {"Forest", "assets/forest.png"},       // Plant + Plant
+            {"Desert", "assets/desert.png"},       // Sand + Sand
+            {"Life", "assets/life.png"}            // Energy + Plant
+        };
 
         // Load all element textures
         for (const auto &pair : texturePaths)
@@ -408,11 +589,40 @@ public:
             textures[pair.first] = tex;
         }
 
-        // Initialize game elements
-        // Fire and Air are discovered by default, Smoke must be created
+        // Initialize game elements (4 basic + 22 discoverable = 26 total)
+        // Basic Elements (discovered = true)
         elements.push_back(std::make_shared<Element>("Fire", "A blazing flame", true));
+        elements.push_back(std::make_shared<Element>("Water", "Crystal clear liquid", true));
+        elements.push_back(std::make_shared<Element>("Earth", "Rich brown soil", true));
         elements.push_back(std::make_shared<Element>("Air", "Invisible breeze", true));
+
+        // Basic Combinations (discovered = false)
+        elements.push_back(std::make_shared<Element>("Steam", "Hot water vapor", false));
+        elements.push_back(std::make_shared<Element>("Lava", "Molten rock and fire", false));
         elements.push_back(std::make_shared<Element>("Smoke", "Cloudy haze", false));
+        elements.push_back(std::make_shared<Element>("Mud", "Wet and sticky earth", false));
+        elements.push_back(std::make_shared<Element>("Mist", "Gentle water vapor", false));
+        elements.push_back(std::make_shared<Element>("Dust", "Fine particles in air", false));
+
+        // Duplicate Element Combinations
+        elements.push_back(std::make_shared<Element>("Energy", "Pure concentrated power", false));
+        elements.push_back(std::make_shared<Element>("Ocean", "Vast body of water", false));
+        elements.push_back(std::make_shared<Element>("Mountain", "Towering earthen peak", false));
+        elements.push_back(std::make_shared<Element>("Wind", "Strong moving air", false));
+
+        // Advanced Combinations
+        elements.push_back(std::make_shared<Element>("Cloud", "Fluffy sky formation", false));
+        elements.push_back(std::make_shared<Element>("Rain", "Falling water droplets", false));
+        elements.push_back(std::make_shared<Element>("Plant", "Green growing life", false));
+        elements.push_back(std::make_shared<Element>("Stone", "Hard solid rock", false));
+        elements.push_back(std::make_shared<Element>("Volcano", "Explosive mountain", false));
+        elements.push_back(std::make_shared<Element>("Lightning", "Electric bolt", false));
+        elements.push_back(std::make_shared<Element>("Ice", "Frozen water crystal", false));
+        elements.push_back(std::make_shared<Element>("Sand", "Tiny rock particles", false));
+        elements.push_back(std::make_shared<Element>("Swamp", "Muddy wetland", false));
+        elements.push_back(std::make_shared<Element>("Forest", "Dense tree collection", false));
+        elements.push_back(std::make_shared<Element>("Desert", "Vast sandy wasteland", false));
+        elements.push_back(std::make_shared<Element>("Life", "The essence of living things", false));
 
         // Add all elements to the book
         for (auto &elem : elements)
@@ -643,7 +853,7 @@ private:
      */
     void draw()
     {
-        window.clear(sf::Color(50, 50, 50)); // Dark gray background
+        window.clear(sf::Color(255, 255, 255)); // Background
 
         sf::Vector2u windowSize = window.getSize();
         float sidebarWidth = 100.0f;
@@ -651,13 +861,13 @@ private:
         // Draw main sandbox area (left side)
         sf::RectangleShape sandbox(sf::Vector2f(windowSize.x - sidebarWidth, windowSize.y));
         sandbox.setPosition(0, 0);
-        sandbox.setFillColor(sf::Color(100, 100, 100)); // Medium gray
+        sandbox.setFillColor(sf::Color(243, 124, 84)); // Main sandbox color
         window.draw(sandbox);
 
         // Draw right sidebar for element buttons
         sf::RectangleShape rightTab(sf::Vector2f(sidebarWidth, windowSize.y));
         rightTab.setPosition(windowSize.x - sidebarWidth, 0);
-        rightTab.setFillColor(sf::Color(150, 150, 150)); // Light gray
+        rightTab.setFillColor(sf::Color(255, 194, 77)); // Light gray
         window.draw(rightTab);
 
         // Draw discovered element buttons in right sidebar
